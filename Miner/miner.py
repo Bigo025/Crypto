@@ -16,15 +16,15 @@ class Miner:
 	def listenToRelay(self):
 		while(True):
 			newTransaction = self.relay_connection.recv(1024) #1024 = nbre caractere max du msg
-			if newTransaction[0] == T :
+			if newTransaction[0] == 0 :
 				if self.transactionIsValid(newTransaction):
 					self.addToBlock()
 
 				if self.blockIsReady():
 					self.sendMinedBlock()
 
-			if newTransaction[0] == M :
-				self.bitcoins += 5
+			if newTransaction[0] == 1 :
+				#add bitcoins
 
 	def transactionIsValid(self, transaction):
 		isValid = False
@@ -48,4 +48,3 @@ class Miner:
 		self.relay_connection.send("block")
 
 		self.block = None
-
