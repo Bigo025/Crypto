@@ -26,3 +26,22 @@ class Block:
 					str(self.transactionCounter) +
 					str(self.transactions).encode())
 		return sha.hexdigest()
+	def getSize():
+		return self.size
+	def getPreviousBlockHash():
+		return self.previousBlockHash
+	def getMerkleRoot():
+		return self.merkleRoot
+	def getTime():
+		return self.time
+	def getDifficulty():
+		return self.difficulty
+	def getNonce():
+		return self.nonce
+	def getTransactionCounter():
+		return self.transactionCounter
+	def getTransactions():
+		return self.transactions
+	def getHash():
+		return self.hash
+		
