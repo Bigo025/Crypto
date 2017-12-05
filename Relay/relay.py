@@ -1,124 +1,173 @@
 import sys
 import socket
 import select
+from threading import Thread
 
-class Relay:
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
+class ThreadRelayListenMaster(Thread):
 
-  def __init__(self, hostName, portMaster, portRelay):
-    #Connexion en client sur le master
-    self.connectionToMaster = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.connectionToMaster.connect((hostName, portMaster))
-    print("Connection established with master on port {}".format(portMaster))
+  def __init__(self, masterSocket, wallets):
+    Thread.__init__(self)
+    self.connectionToMaster = masterSocket
+    self.connectedWallets = wallets
 
-    #Serveur du relay
-    self.relayServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.relayServer.bind((hostName, portRelay))
-    self.relayServer.listen(5)
-    print("Relay listen on port {}".format(portRelay))
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
-    self.connectedWallets = []
-    self.connectedMiners = []
+    while True :
+      messageFromMaster, wlist, xlist = select.select([self.connectionToMaster],
+        [], [], 0.05)
+      if len(messageFromMaster) != 0:
+        msg = receiveAndDecode(self.connectionToMaster)
+        print("Reçu Master: {}".format(msg))
 
-    self.listenAll()
+        for wallet in self.connectedWallets :
+          encodeAndSend(wallet, msg)
 
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
-  def listenAll(self):
-    serverStart = True
+class ThreadRelayListenToNewConnections(Thread):
 
-    while serverStart:
+  def __init__(self, serverSocket, wallets, miners):
+    Thread.__init__(self)
+    self.relayServer = serverSocket
+    self.connectedWallets = wallets
+    self.connectedMiners = miners
 
-      self.listenToMaster()
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
-      self.listenToNewConnections()
+    while True :
+
+      #Ecoute si il y a de nouvelles connexions
+      pendingConnections, wlist, xlist = select.select([self.relayServer],
+        [], [], 0.05)
+        
+      #Ajoute les nouvelles connexions
+      for connection in pendingConnections:
+        clientConnection, connectionInfos = connection.accept()
+
+        clientId = receiveAndDecode(clientConnection)
+
+        if clientId == "0" :
+          self.connectedWallets.append(clientConnection)
+          print("Add new wallet")
+        else :
+          self.connectedMiners.append(clientConnection)
+          print("Add new miner")
       
-      self.listenToWallets()
 
-      self.listenToMiners()
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
+class ThreadRelayListenWallets(Thread):
 
-  def listenToMaster(self):
-    messageFromMaster, wlist, xlist = select.select([self.connectionToMaster],
-        [], [], 0.05)
-    if len(messageFromMaster) != 0:
-      msg = self.receiveAndDecode(self.connectionToMaster)
-      print("Reçu Master: {}".format(msg))
+  def __init__(self, wallets, miners):
+    Thread.__init__(self)
+    self.connectedWallets = wallets
+    self.connectedMiners = miners
 
-      for wallet in self.connectedWallets :
-        self.encodeAndSend(wallet, msg)
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
+    while True :
 
-  def listenToNewConnections(self):
-    #Ecoute si il y a de nouvelles connexions
-    pendingConnections, wlist, xlist = select.select([self.relayServer],
-      [], [], 0.05)
+      #Ecoute si il y a des messages provenant de wallet 
+      #Exceptions si il n'y a pas encore de relay connecté      
+      try:
+        walletsToRead, wlist, xlist = select.select(self.connectedWallets,
+          [], [], 0.05)
+      except select.error:
+        pass
+      else:
+        for wallet in walletsToRead:
+          msg = receiveAndDecode(wallet)
+          print("Reçu Wallet: {}".format(msg))
+
+          for miner in self.connectedMiners : 
+            encodeAndSend(miner, msg)
       
-    #Ajoute les nouvelles connexions
-    for connection in pendingConnections:
-      clientConnection, connectionInfos = connection.accept()
 
-      clientId = clientConnection.recv(1024)
-      clientId = clientId.decode()
-      if clientId == "0" :
-        self.connectedWallets.append(clientConnection)
-        print("Add new wallet")
-      else :
-        self.connectedMiners.append(clientConnection)
-        print("Add new miner")
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
+class ThreadRelayListenMiners(Thread):
 
-  def listenToWallets(self):
+  def __init__(self, masterSocket, miners):
+    Thread.__init__(self)
+    self.connectionToMaster = masterSocket
+    self.connectedMiners = miners
 
-    #Ecoute si il y a des messages provenant de wallet 
-    #Exceptions si il n'y a pas encore de relay connecté      
-    try:
-      walletsToRead, wlist, xlist = select.select(self.connectedWallets,
-        [], [], 0.05)
-    except select.error:
-      pass
-    else:
-      for wallet in walletsToRead:
-        msg = self.receiveAndDecode(wallet)
-        print("Reçu Wallet: {}".format(msg))
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
-        for miner in self.connectedMiners : 
-          self.encodeAndSend(miner, msg)
+    while True :
 
+      #Ecoute si il y a des messages provenant de wallet 
+      #Exceptions si il n'y a pas encore de relay connecté      
+      try:
+        minersToRead, wlist, xlist = select.select(self.connectedMiners,
+          [], [], 0.05)
+      except select.error:
+        pass
+      else:
+        for miner in minersToRead:
+          msg = receiveAndDecode(miner)
+          print("Reçu Miner: {}".format(msg))
+          encodeAndSend(self.connectionToMaster, msg)
+      
 
-  def listenToMiners(self):
-
-    #Ecoute si il y a des messages provenant de wallet 
-    #Exceptions si il n'y a pas encore de relay connecté      
-    try:
-      minersToRead, wlist, xlist = select.select(self.connectedMiners,
-        [], [], 0.05)
-    except select.error:
-      pass
-    else:
-      for miner in minersToRead:
-        msg = self.receiveAndDecode(miner)
-        print("Reçu Miner: {}".format(msg))
-        self.encodeAndSend(self.connectionToMaster, msg)
-
-  def sendToMaster(self, message):
-    self.connectionToMaster.send(message)
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
 
-  def sendToMiners(self, message):
-    pass
+def relay(hostName, portMaster, portRelay):
+
+  #Connexion en client sur le master
+  connectionToMaster = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  connectionToMaster.connect((hostName, portMaster))
+  print("Connection established with master on port {}".format(portMaster))
+
+  #Serveur du relay
+  relayServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  relayServer.bind((hostName, portRelay))
+  relayServer.listen(5)
+  print("Relay listen on port {}".format(portRelay))
+
+  connectedWallets = []
+  connectedMiners = []
+
+  thread1 = ThreadRelayListenMaster(connectionToMaster, connectedWallets)
+  thread2 = ThreadRelayListenToNewConnections(relayServer, connectedWallets, connectedMiners)
+  thread3 = ThreadRelayListenWallets(connectedWallets, connectedMiners)
+  thread4 = ThreadRelayListenMiners(connectionToMaster, connectedMiners)
+
+  thread1.start()
+  thread2.start()
+  thread3.start()
+  thread4.start()
 
 
-  def sendToWallets(self, message):
-    pass
+def encodeAndSend(toSocket, message):
+  msg = message.encode()
+  toSocket.send(msg)
 
-  def encodeAndSend(self, toSocket, message):
-    msg = message.encode()
-    toSocket.send(msg)
+def receiveAndDecode(fromSocket):
+  msg = fromSocket.recv(1024)
+  message = msg.decode()
+  return message
 
-  def receiveAndDecode(self, fromSocket):
-    msg = fromSocket.recv(1024)
-    message = msg.decode()
-    return message
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
 
 def main():
@@ -128,7 +177,7 @@ def main():
     sys.exit(1)
 
   else:
-    monRelay = Relay(sys.argv[1],int(sys.argv[2]),int(sys.argv[3]))
+    relay(sys.argv[1],int(sys.argv[2]),int(sys.argv[3]))
 
 if __name__ == '__main__':
   main()

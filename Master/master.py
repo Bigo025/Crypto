@@ -69,7 +69,7 @@ def main():
     sys.exit(1)
 
   else:
-    monRelay = Master(sys.argv[1],int(sys.argv[2]))
+    monMaster = Master(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
   main()

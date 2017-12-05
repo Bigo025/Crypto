@@ -1,6 +1,7 @@
 import sys
 import socket
 import select
+from threading import Thread
 
 class Miner:
 
@@ -10,7 +11,7 @@ class Miner:
     self.connectionToRelay.connect((hostName, hostPort))
     print("Connection established with Relay on port {}".format(hostPort))
 
-    self.encodeAndSend(self.connectionToRelay, "1") #s'identifie au relay en tant que miner
+    encodeAndSend(self.connectionToRelay, "1") #s'identifie au relay en tant que miner
 
     self.bloc = None
     self.listenToRelay()
@@ -28,12 +29,12 @@ class Miner:
       #if newTransaction[0] == 1 :
         #add bitcoins
 
-      msg = self.receiveAndDecode(self.connectionToRelay)
+      msg = receiveAndDecode(self.connectionToRelay)
       print("Transaction : {}".format(msg))
 
       msg = "["+msg+"]"
       print("Bloc -> {}".format(msg))
-      self.encodeAndSend(self.connectionToRelay, msg)
+      encodeAndSend(self.connectionToRelay, msg)
 
       
   def transactionIsValid(self, transaction):
@@ -60,15 +61,24 @@ class Miner:
 
     self.block = None
 
-  def encodeAndSend(self, toSocket, message):
+
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+
+def encodeAndSend(toSocket, message):
     msg = message.encode()
     toSocket.send(msg)
 
-  def receiveAndDecode(self, fromSocket):
+def receiveAndDecode(fromSocket):
     msg = fromSocket.recv(1024)
     message = msg.decode()
     return message
 
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
 def main():
   if len(sys.argv) != 3:

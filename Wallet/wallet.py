@@ -1,36 +1,72 @@
 import sys
 import socket
 import select
+from threading import Thread
 
-class Wallet:
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
-  def __init__(self, hostName, hostPort):
-    #Connexion en client sur le master
-    self.connectionToRelay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.connectionToRelay.connect((hostName, hostPort))
-    print("Connection established with Relay on port {}".format(hostPort))
+class ThreadWalletListen(Thread):
 
-    self.encodeAndSend(self.connectionToRelay, "0") #s'identifie au relay en tant que wallet
+  def __init__(self, relaySocket):
+    Thread.__init__(self)
+    self.connectionToRelay = relaySocket
 
-    self.listenToRelay()
-
-  def listenToRelay(self):
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
     while True :
+      msg = receiveAndDecode(self.connectionToRelay)
+      print("Reçu Relay: {}".format(msg))
 
-      msg = input("> ")
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
-      self.encodeAndSend(self.connectionToRelay, msg)
+class ThreadWalletWrite(Thread):
 
-  def encodeAndSend(self, toSocket, message):
-    msg = message.encode()
-    toSocket.send(msg)
+  def __init__(self, relaySocket):
+    Thread.__init__(self)
+    self.connectionToRelay = relaySocket
 
-  def receiveAndDecode(self, fromSocket):
-    msg = fromSocket.recv(1024)
-    message = msg.decode()
-    return message
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
+    while True :
+      msg = input()
+      encodeAndSend(self.connectionToRelay, msg)
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+
+def wallet(hostName, hostPort):
+  #Connexion en client sur le master
+  connectionToRelay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  connectionToRelay.connect((hostName, hostPort))
+  print("Connection established with Relay on port {}".format(hostPort))
+
+  encodeAndSend(connectionToRelay, "0") #s'identifie au relay en tant que wallet
+
+  thread1 = ThreadWalletListen(connectionToRelay)
+  thread2 = ThreadWalletWrite(connectionToRelay)
+
+  thread1.start()
+  thread2.start()
+
+def encodeAndSend(toSocket, message):
+  msg = message.encode()
+  toSocket.send(msg)
+
+def receiveAndDecode(fromSocket):
+  msg = fromSocket.recv(1024)
+  message = msg.decode()
+  return message
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
 def main():
 
@@ -39,7 +75,8 @@ def main():
     sys.exit(1)
 
   else:
-    monRelay = Wallet(sys.argv[1],int(sys.argv[2]))
+    wallet(sys.argv[1],int(sys.argv[2]))
+
 
 if __name__ == '__main__':
   main()
