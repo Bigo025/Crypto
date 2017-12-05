@@ -1,3 +1,4 @@
+import sys
 import socket
 import select
 
@@ -33,6 +34,7 @@ class Master:
     for connection in pendingConnections:
       relayConnection, connectionInfos = connection.accept()
       self.connectedRelays.append(relayConnection)
+      print("New relay")
 
   def listenToRelay(self):
     #Ecoute si il y a des messages provenant de relay 
@@ -44,13 +46,30 @@ class Master:
       pass
     else:
       for relay in relaysToRead:
-        msg = relay.recv(1024)
-        msg = msg.decode()
+        msg = self.receiveAndDecode(relay)
         print("Reçu : {}".format(msg))
-        relay.send(b"Ok")
+        msg = "-" + msg + "-"
+        print("Bloc validé : {}".format(msg))
+        self.encodeAndSend(relay, msg)
 
+  def encodeAndSend(self, toSocket, message):
+    msg = message.encode()
+    toSocket.send(msg)
+
+  def receiveAndDecode(self, fromSocket):
+    msg = fromSocket.recv(1024)
+    message = msg.decode()
+    return message
+
+
+def main():
+  
+  if len(sys.argv) != 3:
+    print("Il faut mettre une adresse Ip et un port")
+    sys.exit(1)
+
+  else:
+    monRelay = Master(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
-  hote = ''
-  port = 12800
-  monMaster = Master(hote,port)
+  main()

@@ -1,18 +1,19 @@
+import sys
 import socket
 import select
 
 class Relay:
 
 
-  def __init__(self, hostMaster, portMaster, hostRelay, portRelay):
+  def __init__(self, hostName, portMaster, portRelay):
     #Connexion en client sur le master
     self.connectionToMaster = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.connectionToMaster.connect((hostMaster, portMaster))
+    self.connectionToMaster.connect((hostName, portMaster))
     print("Connection established with master on port {}".format(portMaster))
 
     #Serveur du relay
     self.relayServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.relayServer.bind((hostRelay, portRelay))
+    self.relayServer.bind((hostName, portRelay))
     self.relayServer.listen(5)
     print("Relay listen on port {}".format(portRelay))
 
@@ -40,9 +41,11 @@ class Relay:
     messageFromMaster, wlist, xlist = select.select([self.connectionToMaster],
         [], [], 0.05)
     if len(messageFromMaster) != 0:
-      msg = self.connectionToMaster.recv(4096)
-      msg = msg.decode()
+      msg = self.receiveAndDecode(self.connectionToMaster)
       print("Reçu Master: {}".format(msg))
+
+      for wallet in self.connectedWallets :
+        self.encodeAndSend(wallet, msg)
 
 
   def listenToNewConnections(self):
@@ -75,10 +78,11 @@ class Relay:
       pass
     else:
       for wallet in walletsToRead:
-        msg = wallet.recv(1024)
-        msg = msg.decode()
+        msg = self.receiveAndDecode(wallet)
         print("Reçu Wallet: {}".format(msg))
-        wallet.send(b"Ok")
+
+        for miner in self.connectedMiners : 
+          self.encodeAndSend(miner, msg)
 
 
   def listenToMiners(self):
@@ -92,10 +96,9 @@ class Relay:
       pass
     else:
       for miner in minersToRead:
-        msg = miner.recv(1024)
-        msg = msg.decode()
+        msg = self.receiveAndDecode(miner)
         print("Reçu Miner: {}".format(msg))
-        miner.send(b"Ok")
+        self.encodeAndSend(self.connectionToMaster, msg)
 
   def sendToMaster(self, message):
     self.connectionToMaster.send(message)
@@ -108,10 +111,24 @@ class Relay:
   def sendToWallets(self, message):
     pass
 
+  def encodeAndSend(self, toSocket, message):
+    msg = message.encode()
+    toSocket.send(msg)
+
+  def receiveAndDecode(self, fromSocket):
+    msg = fromSocket.recv(1024)
+    message = msg.decode()
+    return message
+
+
+def main():
+  
+  if len(sys.argv) != 4:
+    print("Il faut mettre une adresse Ip , le port en client et le port en serveur")
+    sys.exit(1)
+
+  else:
+    monRelay = Relay(sys.argv[1],int(sys.argv[2]),int(sys.argv[3]))
 
 if __name__ == '__main__':
-  hoteClient = "localhost"
-  portClient = 12800
-  hoteServeur = ""
-  portServeur = 8888
-  monRelay = Relay(hoteClient,portClient,hoteServeur,portServeur)
+  main()

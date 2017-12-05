@@ -1,3 +1,4 @@
+import sys
 import socket
 import select
 
@@ -9,7 +10,7 @@ class Miner:
     self.connectionToRelay.connect((hostName, hostPort))
     print("Connection established with Relay on port {}".format(hostPort))
 
-    self.connectionToRelay.send(b"1") #s'identifie au relay en tant que miner
+    self.encodeAndSend(self.connectionToRelay, "1") #s'identifie au relay en tant que miner
 
     self.bloc = None
     self.listenToRelay()
@@ -27,14 +28,14 @@ class Miner:
       #if newTransaction[0] == 1 :
         #add bitcoins
 
-      msg = input("> ")
-      msg = msg.encode()
-      self.connectionToRelay.send(msg)
+      msg = self.receiveAndDecode(self.connectionToRelay)
+      print("Transaction : {}".format(msg))
 
-      msg = self.connectionToRelay.recv(4096)
-      msg = msg.decode()
-      print(msg)
+      msg = "["+msg+"]"
+      print("Bloc -> {}".format(msg))
+      self.encodeAndSend(self.connectionToRelay, msg)
 
+      
   def transactionIsValid(self, transaction):
     isValid = False
     #...Code...
@@ -59,8 +60,23 @@ class Miner:
 
     self.block = None
 
+  def encodeAndSend(self, toSocket, message):
+    msg = message.encode()
+    toSocket.send(msg)
+
+  def receiveAndDecode(self, fromSocket):
+    msg = fromSocket.recv(1024)
+    message = msg.decode()
+    return message
+
+
+def main():
+  if len(sys.argv) != 3:
+    print("Il faut mettre une adresse Ip et un port")
+    sys.exit(1)
+
+  else:
+    monRelay = Miner(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
-  hoteClient = "localhost"
-  portClient = 8888
-  monRelay = Miner(hoteClient,portClient)
+  main()
