@@ -3,31 +3,20 @@ import socket
 import select
 from threading import Thread
 
-class Miner:
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
-  def __init__(self, hostName, hostPort):
+class ThreadMinerListenRelay(Thread):
 
-    self.connectionToRelay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.connectionToRelay.connect((hostName, hostPort))
-    print("Connection established with Relay on port {}".format(hostPort))
+  def __init__(self, relaySocket):
+    Thread.__init__(self)
+    self.connectionToRelay = relaySocket
 
-    encodeAndSend(self.connectionToRelay, "1") #s'identifie au relay en tant que miner
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
-    self.bloc = None
-    self.listenToRelay()
-
-  def listenToRelay(self):
     while(True):
-      #newTransaction = self.connectionToRelay.recv(1024) #1024 = nbre caractere max du msg
-      #if newTransaction[0] == 0 :
-        #if self.transactionIsValid(newTransaction):
-          #self.addToBlock()
-
-        #if self.blockIsReady():
-          #self.sendMinedBlock()
-
-      #if newTransaction[0] == 1 :
-        #add bitcoins
 
       msg = receiveAndDecode(self.connectionToRelay)
       print("Transaction : {}".format(msg))
@@ -36,36 +25,40 @@ class Miner:
       print("Bloc -> {}".format(msg))
       encodeAndSend(self.connectionToRelay, msg)
 
-      
-  def transactionIsValid(self, transaction):
-    isValid = False
-    #...Code...
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
-    return isValid
+class ThreadMinerWork(Thread):
 
-  def addToBlock(self):
-    if self.bloc == None :
-      pass
-      #Create block 
-    #...Code...
+  def __init__(self):
+    Thread.__init__(self)
 
-  def blockIsReady(self):
-    isReady = False
-    #...Code...
+  def run(self):
+    """Code à exécuter pendant l'exécution du thread."""
 
-    return isReady
-
-  def sendMinedBlock(self):
-    #...Code...
-    self.relay_connection.send("block")
-
-    self.block = None
-
-
+    while(True):
+      break
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+
+def miner (hostName, hostPort):
+
+  connectionToRelay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  connectionToRelay.connect((hostName, hostPort))
+  print("Connection established with Relay on port {}".format(hostPort))
+
+  encodeAndSend(connectionToRelay, "1") #s'identifie au relay en tant que miner
+
+  bloc = None
+  thread1 = ThreadMinerListenRelay(connectionToRelay)
+  thread2 = ThreadMinerWork()
+  
+  thread1.start()
+  thread2.start()
+
 
 def encodeAndSend(toSocket, message):
     msg = message.encode()
@@ -86,7 +79,7 @@ def main():
     sys.exit(1)
 
   else:
-    monRelay = Miner(sys.argv[1],int(sys.argv[2]))
+    miner(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
   main()
