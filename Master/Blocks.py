@@ -17,15 +17,22 @@ class Block:
 	this function should not be like that it sould sent all infos to the miner and voila 
 	'''
 		sha = hashlib.sha256()
-		sha.update(str(self.size) + 
+		double_sha = hashlib.sha256()
+		data = str(self.size) + 
 					str(self.previousBlockHash) +
 					str(self.merkleRoot) +
 					str(self.time) +
 					str(self.difficulty) +
 					str(self.nonce) +
 					str(self.transactionCounter) +
-					str(self.transactions).encode())
-		return sha.hexdigest()
+					str(self.transactions)
+		sha.update(data.encode())
+		double_sha.update(sha.digest())
+		
+		return double_sha.digest()
+
+		
+
 	def getSize():
 		return self.size
 	def getPreviousBlockHash():
