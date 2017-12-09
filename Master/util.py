@@ -81,9 +81,6 @@ def genesis_block():
 			["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
 	return genesis
 
-currentBlock = genesis_block()
-add_block_to_log()
-import_previous_block()
 	
 def hash_transaction(transaction):
 	# ptt que ce que je fais n'est pas correcte  !
