@@ -1,8 +1,69 @@
 from datetime import datetime
 from Blocks import Block
+import re #regex
 import hashlib
 
-blockchain = [] 
+blockchain = []
+currentBlock = None
+separator = "-------------------------------------"
+numberOfBlockAttributes = 9
+
+def block_to_text(block):
+        txt = ""
+        txt += str(block.getSize()) + "\n"
+        txt += str(block.getPreviousBlockHash()) + "\n"
+        txt += str(block.getMerkleRoot()) + "\n"
+        txt += str(block.getTime()) + "\n"
+        txt += str(block.getDifficulty()) + "\n"
+        txt += str(block.getNonce()) + "\n"
+        txt += str(block.getTransactionCounter()) + "\n"
+        txt += str(block.getTransactions()) + "\n"
+        txt += str(block.getHash()) + "\n"
+        return txt
+        
+        
+def add_block_to_log():
+        file = open("blockchain.log","a")
+        file.write(separator+"\n")
+        file.write(block_to_text(currentBlock))
+        file.close()        
+
+        
+def import_previous_block():
+        file = open("blockchain.log","r")
+        linesList = file.read().splitlines()
+        attributeIndex = 0
+        for line in linesList:
+                if line == separator:
+                        attributeIndex = 0
+                elif attributeIndex == 1:
+                        blockSize = int(line)
+                elif attributeIndex == 2:
+                        previousBlockHash = line
+                elif attributeIndex == 3:
+                        merkleRoot = line
+                elif attributeIndex == 4:
+                        blockTime = datetime.strptime(line,'%Y-%m-%d %H:%M:%S.%f')
+                elif attributeIndex == 5:
+                        difficulty = int(line)
+                elif attributeIndex == 6:
+                        nonce = int(line)
+                elif attributeIndex == 7:
+                        transactionsCounter = int(line)
+                elif attributeIndex == 8:
+                        data = line
+                        transactions = []
+                        data = re.split("\W+",data)
+                        while '' in data:
+                                data.remove('')
+                        for transaction in data:
+                                transactions.append(transaction)
+                elif attributeIndex == 9:
+                        blockHash = line
+                elif attributeIndex > numberOfBlockAttributes:
+                        print("error in numberOfBlockAttributes")
+                attributeIndex+=1
+        file.close()
 
 
 def genesis_block():
@@ -19,7 +80,10 @@ def genesis_block():
 			0, 
 			["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
 	return genesis
-	
+
+currentBlock = genesis_block()
+add_block_to_log()
+import_previous_block()
 	
 def hash_transaction(transaction):
 	# ptt que ce que je fais n'est pas correcte  !

@@ -13,42 +13,41 @@ class Block:
 		self.hash = self.hash_block()
 		
 	def hash_block(self):
-	'''
-	this function should not be like that it sould sent all infos to the miner and voila 
-	'''
-		sha = hashlib.sha256()
-		double_sha = hashlib.sha256()
-		data = str(self.size) + 
-					str(self.previousBlockHash) +
-					str(self.merkleRoot) +
-					str(self.time) +
-					str(self.difficulty) +
-					str(self.nonce) +
-					str(self.transactionCounter) +
-					str(self.transactions)
-		sha.update(data.encode())
-		double_sha.update(sha.digest())
-		
-		return double_sha.digest()
+                '''
+                this function should not be like that it sould sent all infos to the miner and voila 
+                '''
+                sha = hashlib.sha256()
+                double_sha = hashlib.sha256()
+                data = str(self.size) + \
+                       str(self.previousBlockHash) +\
+                       str(self.merkleRoot) +\
+                       str(self.time) +\
+                       str(self.difficulty) +\
+                       str(self.nonce) +\
+                       str(self.transactionCounter) +\
+                       str(self.transactions)
+                sha.update(data.encode())
+                double_sha.update(sha.digest())
+                return double_sha.digest()
 
 		
 
-	def getSize():
+	def getSize(self):
 		return self.size
-	def getPreviousBlockHash():
+	def getPreviousBlockHash(self):
 		return self.previousBlockHash
-	def getMerkleRoot():
+	def getMerkleRoot(self):
 		return self.merkleRoot
-	def getTime():
+	def getTime(self):
 		return self.time
-	def getDifficulty():
+	def getDifficulty(self):
 		return self.difficulty
-	def getNonce():
+	def getNonce(self):
 		return self.nonce
-	def getTransactionCounter():
+	def getTransactionCounter(self):
 		return self.transactionCounter
-	def getTransactions():
+	def getTransactions(self):
 		return self.transactions
-	def getHash():
+	def getHash(self):
 		return self.hash
 		
