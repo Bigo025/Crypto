@@ -2,8 +2,9 @@ import sys
 import socket
 import select
 from threading import Thread
-from Crypto.PublicKey import RSA
-import hashlib
+from Crypto.PublicKey import DSA
+from Crypto.Signature import DSS
+from Crypto.Hash import SHA256
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -74,11 +75,11 @@ def receiveAndDecode(fromSocket):
 
 def fetch_key(name, password):	
   """
-  The following code reads the private RSA key back in, and then create public addresse.
+  The following code reads the private DSA key back in, and then create public addresse.
   return : publickey and  public addresse
   """
-  file = open(name+".bin", "rb").read()
-  key = RSA.import_key(file, passphrase=password)
+  file = open(name+".pem", "rb").read()
+  key = DSA.import_key(file, passphrase=password)
   
   sha = hashlib.sha256()
   sha.update(key.publickey().exportKey())
@@ -89,15 +90,41 @@ def fetch_key(name, password):
   #RIPEMD160 to derive addresses from public keys
   address = ripemd.hexdigest()
   print(" Addresse : ", address)
-  
+  #print("-----------------------------------------------------------------------------")
   #print(key.publickey().exportKey())
-  return (key.publickey().exportKey(), address) 
+  return (key, key.publickey(), address) 
+	
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+
+def sign_transaction(publicKey, privateKey, data):
+  """
+  return the publicKey, the signature and the hashed transaction (so we can send this to the relay node).
+  """
+  sha = SHA256.new(data)
+  signer = DSS.new(privateKey, 'fips-186-3')
+  signature = privateKey.sign(sha)
+  return(publicKey, signature, sha)
+  
+def verify_signature(publicKey, signature, sha):
+  verifier = DSS.new(publicKey, 'fips-186-3')
+  try:
+    verifier.verify(sha, signature)
+    print("The signature is authentic.")
+  except ValueError:
+    print("Error :The signature is not authentic.")
+    
+
+  
+  
 	
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 
 def main():
+  privateKey = None
   publicKey = None 
   publicAddress = None
   if len(sys.argv) != 5:
@@ -107,7 +134,7 @@ def main():
   else:
     wallet(sys.argv[1],int(sys.argv[2]))
     # call fetch_key 
-    publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
+    privateKey, publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
 
 
 if __name__ == '__main__':
