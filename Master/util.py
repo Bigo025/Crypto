@@ -8,25 +8,12 @@ currentBlock = None
 separator = "-------------------------------------"
 numberOfBlockAttributes = 9
 
-def block_to_text(block):
-  txt = ""
-  txt += str(block.getSize()) + "\n"
-  txt += str(block.getPreviousBlockHash()) + "\n"
-  txt += str(block.getMerkleRoot()) + "\n"
-  txt += str(block.getTime()) + "\n"
-  txt += str(block.getDifficulty()) + "\n"
-  txt += str(block.getNonce()) + "\n"
-  txt += str(block.getTransactionCounter()) + "\n"
-  txt += str(block.getTransactions()) + "\n"
-  txt += str(block.getHash()) + "\n"
-  return txt
-        
         
 def add_block_to_log():
   file = open("blockchain.log","a")
   file.write(separator+"\n")
-  file.write(block_to_text(currentBlock))
-  file.close()        
+  file.write(toString(currentBlock, True))
+  file.close()
 
         
 def import_previous_block():
@@ -96,7 +83,33 @@ def hash_transaction(transaction):
 def new_block(size, previousblockhash, merkleroot, difficulty, nonce, transactionCounter, transactions):
   newBlock = Block(size, previousblockhash, merkleroot, datetime.now(), difficulty, nonce, transactionCounter +1, transactions)
   return newBlock
-	
+
+def new_block_from_list(attributesList):
+  if len(attributesList) == 9:
+    blockSize = int(attributesList[0])
+    previousBlockHash = attributesList[1]
+    merkleRoot = attributesList[2]
+    blockTime = datetime.strptime(attributesList[3],'%Y-%m-%d %H:%M:%S.%f')
+    difficulty = int(attributesList[4])
+    nonce = int(attributesList[5])
+    transactionsCounter = int(attributesList[6])
+
+    data = attributesList[7]
+    transactions = []
+    data = re.split("\W+",data)
+    while '' in data:
+      data.remove('')
+    for transaction in data:
+      transactions.append(transaction)
+
+    blockHash = attributesList[8] # recalculated when creating block object
+    return Block(blockSize, previousBlockHash, merkleRoot, blockTime, difficulty, nonce, transactionsCounter, transactions)
+  else:
+    print("util.py -> new_block_from_list: wrong number of attributes")
+
+def new_block_from_string(string):
+  attributesList = string.split("&") #separator = &
+  return new_block_from_list(attributesList)
 	
 # blockchain.append(genesis_block())
 # blockchain.append(new_block(size, ...))
@@ -114,7 +127,3 @@ def validate_block(newBlock, previousblock):
     print("Invalid difficulty")
     res = False
   return res
-
-	
-	
-	

@@ -5,9 +5,8 @@ class MerkleTree:
   def __init__(self, transactionsList):
     self.transactionsList = transactionsList
     self.previousTransaction = OrderedDict()
-    if (len(self.transactionsList) > 1):
     
-    def build_tree(self):
+  def build_tree(self):
     tempTransactionsList = self.transactionsList
     tempPreviousTransaction = self.previousTransaction
     newTransactionsList = []

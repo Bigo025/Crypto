@@ -19,16 +19,35 @@ class Block:
     sha = hashlib.sha256()
     double_sha = hashlib.sha256()
     data = str(self.size) + \
-	  str(self.previousBlockHash) +\
-      str(self.merkleRoot) +\
-      str(self.time) +\
-      str(self.difficulty) +\
-      str(self.nonce) +\
-      str(self.transactionCounter) +\
-      str(self.transactions)
-  sha.update(data.encode())
-  double_sha.update(sha.digest())
-  return double_sha.digest()
+           str(self.previousBlockHash) +\
+           str(self.merkleRoot) +\
+           str(self.time) +\
+           str(self.difficulty) +\
+           str(self.nonce) +\
+           str(self.transactionCounter) +\
+           str(self.transactions)
+    sha.update(data.encode())
+    double_sha.update(sha.digest())
+    return double_sha.digest()
+
+  def toString(self, log = False):
+    if log:
+      separator = "\n"
+    else:
+      separator = "&"
+    res = ""
+    res += str(self.size) + separator
+    res += str(self.previousBlockHash) + separator
+    res += str(self.merkleRoot) + separator
+    res += str(self.time) + separator
+    res += str(self.difficulty) + separator
+    res += str(self.nonce) + separator
+    res += str(self.transactionCounter) + separator
+    res += str(self.transactions) + separator
+    res += str(self.hash)
+    if log:
+      res += separator
+    return res
 
     
 
