@@ -15,6 +15,10 @@ Il faut préciser l'ip et le port du relay
 ex : python miner.py localhost 8888 
 
 - Ouvrir terminal dans wallet :
+Créer un wallet avec la ligne
+python new_key.py username password
+
+- Ouvrir terminal dans wallet :
 Il faut préciser l'ip et le port du relay
 ex : python wallet.py localhost 8888 username password
 
