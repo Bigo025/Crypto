@@ -29,19 +29,13 @@ class ThreadMinerListenRelay(Thread, transactions):
       msg = receiveAndDecode(self.connectionToRelay)
       print("Transaction : {}".format(msg))
 
-      #P-e Verification de transaction sauf si on considere que
-      #le relay envoit que des transactions correctes/vérifiés et
-      #qu'il n'y a pas de raison de revérifier 
-      #Pour l'instant on considere que le relay a vérifié et qu'il
-      #n'est pas nécessaire de revérifier
-
       if (msg == "Stop") : #Message pour stop car un block a été trouvé par quelqu'un
         stopMinerWork()
       
-      else if (msg[0] == "x") :
+      elif (msg[0] == "x") :
         previousBlock = msg[1:]
       
-      else : #C'est une transaction 
+      elif (msg[0] == "t") : #C'est une transaction 
         self.transactionsToMine.append(msg)
 
 
@@ -64,12 +58,12 @@ class ThreadMinerWork(Thread):
 
   def run(self):
     found = False
-    transactionsList = self.transactionsToMine
+    transactionsList = self.transactionsToMine[:]
     nonce = random.randint(0, 1000000000)
     compteur = 0
     prev_block = self.previousBlock
     while (not found or not self.stop):
-      mrklroot = calculateMerkleRoot(transactionsList)
+      mrklroot = self.calculateMerkleRoot(transactionsList)
       date = int(time.time()) # 2014-02-20 04:57:25
       bits = 0x1fffffff
       # https://en.bitcoin.it/wiki/Difficulty
@@ -83,7 +77,7 @@ class ThreadMinerWork(Thread):
                 codecs.decode(mrklroot[::-1], 'hex') + struct.pack("<LLL", date, bits, nonce))
       hash = hashlib.sha256(hashlib.sha256(header).digest()).digest()
       print(nonce, codecs.encode(hash[::-1], 'hex'))
-      if hash[::-1] < target_str:
+      if ((hash[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot)):
         print('success')
         print(compteur)
         found = True
@@ -91,12 +85,14 @@ class ThreadMinerWork(Thread):
       if nonce==1000000000:
         nonce=1
       compteur +=1
-      
-    #TODO
-    if (previousBlockStillTheSame()) : 
-      encodeAndSend(hashBlock)
 
-  def calculateMerkleRoot(transactionsList):
+
+  def merkleRootStillTheSame(self, currentMerkleRoot):
+    transactionsList = self.transactionsToMine[:]
+    newMerkleRoot = self.calculateMerkleRoot(transactionsList)
+    return newMerkleRoot == currentMerkleRoot
+
+  def calculateMerkleRoot(self, transactionsList):
     tmpTransactionsList = transactionsList
     newTransactionsList = []
     
@@ -119,26 +115,14 @@ class ThreadMinerWork(Thread):
     if len(tmpTransactionsList) != 1:
       transactionsList = newTransactionsList
       calculateMerkleRoot(transactionsList)
-    return transactionsList[-1]
+    return transactionsList[0]
 
-  def previousBlockStillTheSame():
-    pass  
- 
-  def blockIsReady(self):
-    ready = False
-
-    if (self.block != None):
-
-      correctHashStart = "0"*self.difficulty #Voir type du hash (conversion possible)
-      currentBlockHashStart = self.block[0:self.difficulty]
-
-      if (currentBlockHashStart == correctHashStart):
-        ready = True
-
-    return ready
+  def previousBlockStillTheSame(self, currentPreviousBlock):
+      return currentPreviousBlock == self.previousBlock
   
   def stopThread(self):
     self.stop = True
+
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
