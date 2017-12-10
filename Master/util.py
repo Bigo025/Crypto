@@ -100,8 +100,8 @@ def new_block_from_list(attributesList):
     for transaction in data:
       transactions.append(transaction)
 
-    blockHash = attributesList[8] # recalculated when creating block object
-    return Block(blockSize, previousBlockHash, merkleRoot, blockTime, difficulty, nonce, transactionsCounter, transactions)
+    blockHash = attributesList[8]
+    return Block(blockSize, previousBlockHash, merkleRoot, blockTime, difficulty, nonce, transactionsCounter, transactions, blockHash)
   else:
     print("util.py -> new_block_from_list: wrong number of attributes")
 

@@ -1,7 +1,7 @@
 import hashlib
 
 class Block:
-  def __init__(self, size, previousBlockHash, merkleRoot, time, difficulty, nonce, transactionCounter, transactions):
+  def __init__(self, size, previousBlockHash, merkleRoot, time, difficulty, nonce, transactionCounter, transactions, blockHash = None):
     self.size = size
     self.previousBlockHash = previousBlockHash
     self.merkleRoot = merkleRoot
@@ -10,7 +10,7 @@ class Block:
     self.nonce = nonce
     self.transactionCounter = transactionCounter
     self.transactions = transactions
-    self.hash = None
+    self.hash = blockHash
     
   def hash_block(self):
     '''
