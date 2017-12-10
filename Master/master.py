@@ -1,7 +1,10 @@
 import sys
 import socket
 import select
+import util
 from threading import Thread
+
+previousBlock = None
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -50,6 +53,7 @@ class ThreadMasterListenToRelay(Thread):
 
   def run(self):
     """Code à exécuter pendant l'exécution du thread."""
+    global previousBlock
 
     #Ecoute si il y a de nouvelles connexions
 
@@ -62,10 +66,15 @@ class ThreadMasterListenToRelay(Thread):
       else:
         for relay in relaysToRead:
           msg = receiveAndDecode(relay)
-          print("Reçu : {}".format(msg))
-          msg = "-" + msg + "-"
-          print("Bloc validé : {}".format(msg))
-          encodeAndSend(relay, msg)
+          newBlock = new_block_from_string(msg)
+          if (newBlock == None):
+            print("Error: creation block from string")
+          else:
+            if (validate_block(newBlock, previousBlock)):
+              print("Bloc validé")
+              previousBlock = newBlock
+              add_block_to_log(newBlock)
+              encodeAndSend(relay, newBlock.toString())
 
 
 #---------------------------------------------------------------

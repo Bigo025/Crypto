@@ -3,16 +3,14 @@ from Blocks import Block
 import re #regex
 import hashlib
 
-blockchain = []
-currentBlock = None
 separator = "-------------------------------------"
 numberOfBlockAttributes = 9
 
         
-def add_block_to_log():
+def add_block_to_log(newBlock):
   file = open("blockchain.log","a")
   file.write(separator+"\n")
-  file.write(toString(currentBlock, True))
+  file.write(newBlock.toString(True))
   file.close()
 
         
@@ -64,7 +62,7 @@ def genesis_block():
                   datetime.now(),
                   1,
                   100,
-                  0,
+                  1,
                   ["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
   return genesis
 
@@ -115,15 +113,36 @@ def new_block_from_string(string):
 # blockchain.append(new_block(size, ...))
 
 
-def validate_block(newBlock, previousblock):
+def validate_block(newBlock, previousBlock):
   res = True
-  if (previousblock.getTransactionCounter()+1 != newBlock.getTransactionCounter):
+  # il faut renommer size par ID ou number, non?
+  # on parle de la taille de la blockChain
+  if (previousBlock.getSize()+1 != newBlock.getSize()):
     print("Invalid transactionCounter")
     res = False
-  elif (previousblock.getHash() != newBlock.getPreviousBlockHash):
+  elif (previousBlock.getHash() != newBlock.getPreviousBlockHash()):
     print("Invalid previousBlockHash")
     res = False
-  elif (newBlock.getHash())[:newBlock.getDifficulty()] != newBlock.getDifficulty()*"0":
+  elif (newBlock.getHash()[:newBlock.getDifficulty()] != newBlock.getDifficulty()*"0"):
     print("Invalid difficulty")
     res = False
   return res
+
+'''
+TEST ajout d'un block reçu par un relay
+
+previousBlock = genesis_block()
+previousBlock.hash_block()
+newBlock = Block(286,previousBlock.getHash(),"1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5",datetime.now(),0,42,1,["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
+msg = newBlock.toString()
+newBlock = new_block_from_string(msg)
+newBlock.hash_block()
+if (newBlock == None):
+  print("Error: creation block from string")
+else:
+  if (validate_block(newBlock, previousBlock)):
+    print("Bloc validé")
+    previousBlock = newBlock
+    add_block_to_log(newBlock)
+
+'''

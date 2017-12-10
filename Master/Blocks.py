@@ -10,11 +10,11 @@ class Block:
     self.nonce = nonce
     self.transactionCounter = transactionCounter
     self.transactions = transactions
-    self.hash = self.hash_block()
+    self.hash = None
     
   def hash_block(self):
     '''
-    this function should not be like that it sould sent all infos to the miner and voila 
+    function used for tests
     '''
     sha = hashlib.sha256()
     double_sha = hashlib.sha256()
@@ -28,7 +28,8 @@ class Block:
            str(self.transactions)
     sha.update(data.encode())
     double_sha.update(sha.digest())
-    return double_sha.digest()
+    self.hash = str(double_sha.digest())
+    return self.hash
 
   def toString(self, log = False):
     if log:
@@ -69,4 +70,7 @@ class Block:
     return self.transactions
   def getHash(self):
     return self.hash
+
+  def setHash(string):
+    self.hash = string
     
