@@ -16,7 +16,7 @@ ex : python miner.py localhost 8888
 
 - Ouvrir terminal dans wallet :
 Il faut préciser l'ip et le port du relay
-ex : python wallet.py localhost 8888 
+ex : python wallet.py localhost 8888 username password
 
 
 
