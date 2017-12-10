@@ -2,6 +2,8 @@ import sys
 import socket
 import select
 from threading import Thread
+from Crypto.PublicKey import RSA
+import hashlib
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -68,14 +70,44 @@ def receiveAndDecode(fromSocket):
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 
-def main():
 
-  if len(sys.argv) != 3:
-    print("Il faut mettre une adresse Ip et un port")
+
+def fetch_key(name, password):	
+  """
+  The following code reads the private RSA key back in, and then create public addresse.
+  return : publickey and  public addresse
+  """
+  file = open(name+".bin", "rb").read()
+  key = RSA.import_key(file, passphrase=password)
+  
+  sha = hashlib.sha256()
+  sha.update(key.publickey().exportKey())
+  
+  ripemd = hashlib.new('ripemd160')
+  ripemd.update(sha.digest())
+  
+  #RIPEMD160 to derive addresses from public keys
+  address = ripemd.hexdigest()
+  print(" Addresse : ", address)
+  
+  #print(key.publickey().exportKey())
+  return (key.publickey().exportKey(), address) 
+	
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+
+def main():
+  publicKey = None 
+  publicAddress = None
+  if len(sys.argv) != 5:
+    print("Il faut mettre une adresse Ip, un port, Nom du wallet et mot de passe")
     sys.exit(1)
 
   else:
     wallet(sys.argv[1],int(sys.argv[2]))
+    # call fetch_key 
+    publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
 
 
 if __name__ == '__main__':
