@@ -5,7 +5,9 @@ from threading import Thread
 from Crypto.PublicKey import DSA
 from Crypto.Signature import DSS
 from Crypto.Hash import SHA256
+import hashlib
 import pickle
+from datetime import datetime
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -38,8 +40,15 @@ class ThreadWalletWrite(Thread):
     """Code à exécuter pendant l'exécution du thread."""
 
     while True :
-      msg = input()
-      encodeAndSend(self.connectionToRelay, msg)
+      print(" Pour une nouvelle transaction entez : ")
+      recipient = input(" L'addresse du recipient  : ")
+      amount = input(" Montant  : ")
+      data = str(publicAddress) + recipient + amount + str(datetime.now())
+      signature, sha = sign_transaction(privateKey, data.encode())
+      data = send_format(publicKey, signature, sha, str(publicAddress), recipient, amount)
+      
+      encodeAndSend(self.connectionToRelay, data)
+      print(" Montant envoyé")
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -90,7 +99,7 @@ def fetch_key(name, password):
   
   #RIPEMD160 to derive addresses from public keys
   address = ripemd.hexdigest()
-  print(" Addresse : ", address)
+  print("  Addresse public :   ", address)
   #print("-----------------------------------------------------------------------------")
   #print(key.publickey().exportKey())
   return (key, key.publickey(), address) 
@@ -99,17 +108,18 @@ def fetch_key(name, password):
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 
-def sign_transaction(publicKey, privateKey, data):
+def sign_transaction(privateKey, data):
   """
   return the publicKey, the signature and the hashed transaction (so we can send this to the relay node).
   """
   sha = SHA256.new(data)
   signer = DSS.new(privateKey, 'fips-186-3')
-  signature = privateKey.sign(sha)
-  return(publicKey, signature, sha)
+  signature = signer.sign(sha)
+  return(signature, sha)
   
 def verify_signature(publicKey, signature, sha):
-  verifier = DSS.new(publicKey, 'fips-186-3')
+  signaturePublicKey = DSA.import_key(publicKey)
+  verifier = DSS.new(signaturePublicKey, 'fips-186-3')
   try:
     verifier.verify(sha, signature)
     print("The signature is authentic.")
@@ -117,17 +127,18 @@ def verify_signature(publicKey, signature, sha):
     print("Error :The signature is not authentic.")
     
 
-  
-  
+def send_format(publicKey, signature, sha, senderAddress, receiverAddress, amount):
+  data = (publicKey.exportKey(), signature, sha, senderAddress, receiverAddress, amount, datetime.now())
+  return data
 	
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 
 def main():
-  privateKey = None
-  publicKey = None 
-  publicAddress = None
+  global privateKey 
+  global publicKey
+  global publicAddress
   if len(sys.argv) != 5:
     print("Il faut mettre une adresse Ip, un port, Nom du wallet et mot de passe")
     sys.exit(1)
@@ -136,7 +147,11 @@ def main():
     wallet(sys.argv[1],int(sys.argv[2]))
     # call fetch_key 
     privateKey, publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
+  print(publicAddress)
 
 
 if __name__ == '__main__':
+  privateKey = None
+  publicKey = None 
+  publicAddress = None
   main()
