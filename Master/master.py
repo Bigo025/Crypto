@@ -67,7 +67,7 @@ class ThreadMasterListenToRelay(Thread):
       else:
         for relay in relaysToRead:
           msg = receiveAndDecode(relay)
-          newBlock = new_block_from_string(msg)
+          newBlock = msg
           if (newBlock == None):
             print("Error: creation block from string")
           else:
@@ -75,7 +75,7 @@ class ThreadMasterListenToRelay(Thread):
               print("Bloc validé")
               previousBlock = newBlock
               add_block_to_log(newBlock)
-              encodeAndSend(relay, newBlock.toString())
+              encodeAndSend(relay, newBlock)
 
 
 #---------------------------------------------------------------
