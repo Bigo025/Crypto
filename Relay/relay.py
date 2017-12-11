@@ -2,6 +2,7 @@ import sys
 import socket
 import select
 from threading import Thread
+import pickle
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -17,11 +18,12 @@ class ThreadRelayListenMaster(Thread):
   def run(self):
     """Code à exécuter pendant l'exécution du thread."""
 
+    global lastBlock
     while True :
       messageFromMaster, wlist, xlist = select.select([self.connectionToMaster],
         [], [], 0.05)
       if len(messageFromMaster) != 0:
-        msg = receiveAndDecode(self.connectionToMaster)
+        lastBlock = receiveAndDecode(self.connectionToMaster)
         print("Reçu Master: {}".format(msg))
 
         for wallet in self.connectedWallets :
@@ -33,14 +35,16 @@ class ThreadRelayListenMaster(Thread):
 
 class ThreadRelayListenToNewConnections(Thread):
 
-  def __init__(self, serverSocket, wallets, miners):
+  def __init__(self, serverSocket, wallets, miners, transactions):
     Thread.__init__(self)
     self.relayServer = serverSocket
     self.connectedWallets = wallets
     self.connectedMiners = miners
+    self.transactionsList = transactions
 
   def run(self):
     """Code à exécuter pendant l'exécution du thread."""
+    global lastBlock
 
     while True :
 
@@ -59,6 +63,8 @@ class ThreadRelayListenToNewConnections(Thread):
           print("Add new wallet")
         else :
           self.connectedMiners.append(clientConnection)
+          encodeAndSend() #Liste des transactions
+          encodeAndSend(lastBlock) #LastBlock
           print("Add new miner")
       
 
@@ -68,10 +74,11 @@ class ThreadRelayListenToNewConnections(Thread):
 
 class ThreadRelayListenWallets(Thread):
 
-  def __init__(self, wallets, miners):
+  def __init__(self, wallets, miners, transactions):
     Thread.__init__(self)
     self.connectedWallets = wallets
     self.connectedMiners = miners
+    self.transactionsList = transactions
 
   def run(self):
     """Code à exécuter pendant l'exécution du thread."""
@@ -88,6 +95,7 @@ class ThreadRelayListenWallets(Thread):
       else:
         for wallet in walletsToRead:
           msg = receiveAndDecode(wallet)
+          self.transactionsList.append(transactions)
           print("Reçu Wallet: {}".format(msg))
 
           for miner in self.connectedMiners : 
@@ -100,10 +108,11 @@ class ThreadRelayListenWallets(Thread):
 
 class ThreadRelayListenMiners(Thread):
 
-  def __init__(self, masterSocket, miners):
+  def __init__(self, masterSocket, miners, transactions):
     Thread.__init__(self)
     self.connectionToMaster = masterSocket
     self.connectedMiners = miners
+    self.transactionsList = transactions
 
   def run(self):
     """Code à exécuter pendant l'exécution du thread."""
@@ -119,6 +128,7 @@ class ThreadRelayListenMiners(Thread):
         pass
       else:
         for miner in minersToRead:
+          self.transactionsList = []
           msg = receiveAndDecode(miner)
           print("Reçu Miner: {}".format(msg))
           encodeAndSend(self.connectionToMaster, msg)
@@ -142,13 +152,18 @@ def relay(hostName, portMaster, portRelay):
   relayServer.listen(5)
   print("Relay listen on port {}".format(portRelay))
 
+  global lastBlock
+
+  lastBlock = receiveAndDecode(connectionToMaster)
+
   connectedWallets = []
   connectedMiners = []
+  transactionsList = []
 
   thread1 = ThreadRelayListenMaster(connectionToMaster, connectedWallets)
-  thread2 = ThreadRelayListenToNewConnections(relayServer, connectedWallets, connectedMiners)
-  thread3 = ThreadRelayListenWallets(connectedWallets, connectedMiners)
-  thread4 = ThreadRelayListenMiners(connectionToMaster, connectedMiners)
+  thread2 = ThreadRelayListenToNewConnections(relayServer, connectedWallets, connectedMiners, transactionsList)
+  thread3 = ThreadRelayListenWallets(connectedWallets, connectedMiners, transactionsList)
+  thread4 = ThreadRelayListenMiners(connectionToMaster, connectedMiners, transactionsList)
 
   thread1.start()
   thread2.start()
@@ -157,12 +172,12 @@ def relay(hostName, portMaster, portRelay):
 
 
 def encodeAndSend(toSocket, message):
-  msg = message.encode()
+  msg = pickle.dumps(message)
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
   msg = fromSocket.recv(1024)
-  message = msg.decode()
+  message = pickle.loads(msg)
   return message
 
 #---------------------------------------------------------------
@@ -180,4 +195,5 @@ def main():
     relay(sys.argv[1],int(sys.argv[2]),int(sys.argv[3]))
 
 if __name__ == '__main__':
+  lastBlock = None
   main()

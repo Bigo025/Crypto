@@ -5,6 +5,7 @@ from threading import Thread
 from Crypto.PublicKey import DSA
 from Crypto.Signature import DSS
 from Crypto.Hash import SHA256
+import pickle
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -59,12 +60,12 @@ def wallet(hostName, hostPort):
   thread2.start()
 
 def encodeAndSend(toSocket, message):
-  msg = message.encode()
+  msg = pickle.dumps(message)
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
   msg = fromSocket.recv(1024)
-  message = msg.decode()
+  message = pickle.loads(msg)
   return message
 
 #---------------------------------------------------------------

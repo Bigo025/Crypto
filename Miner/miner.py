@@ -7,6 +7,7 @@ import codecs
 import time
 import random
 from threading import Thread
+import pickle
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -141,7 +142,8 @@ def miner (hostName, hostPort):
   global transactions
   
   block = None
-  transactions =[]
+  transactions = receiveAndDecode(connectionToRelay)
+
 
   thread1 = ThreadMinerListenRelay(connectionToRelay, transactions)
   thread2 = ThreadMinerWork(transactions, block)
@@ -150,12 +152,12 @@ def miner (hostName, hostPort):
   thread2.start()
 
 def encodeAndSend(toSocket, message):
-  msg = message.encode()
+  msg = pickle.dumps(message)
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
   msg = fromSocket.recv(1024)
-  message = msg.decode()
+  message = pickle.loads(msg)
   return message
 
 def stopMinerWork():

@@ -3,6 +3,7 @@ import socket
 import select
 import util
 from threading import Thread
+import pickle
 
 previousBlock = None
 
@@ -99,12 +100,12 @@ def master(hostName, hostPort):
 
 
 def encodeAndSend(toSocket, message):
-  msg = message.encode()
+  msg = pickle.dumps(message)
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
-  msg = fromSocket.recv(4096)
-  message = msg.decode()
+  msg = fromSocket.recv(1024)
+  message = pickle.loads(msg)
   return message
 
 #---------------------------------------------------------------
