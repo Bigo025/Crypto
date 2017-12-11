@@ -40,9 +40,9 @@ class ThreadWalletWrite(Thread):
     """Code à exécuter pendant l'exécution du thread."""
 
     while True :
-      pritn("********************************************************** \n")
+      print("********************************************************** \n")
       print(" Adresse publique ")
-      pritn("********************************************************** \n")
+      print("********************************************************** \n")
       print(" Pour une nouvelle transaction entez : ")
       recipient = input(" L'addresse du recipient  : ")
       amount = input(" Montant  : ")
@@ -53,7 +53,7 @@ class ThreadWalletWrite(Thread):
       
       encodeAndSend(self.connectionToRelay, dataToSend)
       print(" Montant envoyé")
-      pritn("********************************************************** \n")
+      print("********************************************************** \n")
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
