@@ -8,7 +8,7 @@ sys.path.append(path.abspath('../Utils'))
 from Blocks import Block
 
 separator = "-------------------------------------"
-numberOfBlockAttributes = 9
+numberOfBlockAttributes = 7
 
         
 def add_block_to_log(newBlock):
@@ -60,13 +60,11 @@ def genesis_block():
   create the first bock manually => the genesis block
   '''
   # example
-  genesis = Block(285,
-                  None,
+  genesis = Block(None,
                   "1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5",
                   datetime.now(),
                   1,
                   100,
-                  1,
                   ["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
   return genesis
 
@@ -83,20 +81,18 @@ def hash_transaction(transaction):
 # merkleroot : create a new merkle tree and insert the root 
 # transactions is a list of hashed transactions not hashed blocks !
 def new_block(size, previousblockhash, merkleroot, difficulty, nonce, transactionCounter, transactions):
-  newBlock = Block(size, previousblockhash, merkleroot, datetime.now(), difficulty, nonce, transactionCounter +1, transactions)
+  newBlock = Block(previousblockhash, merkleroot, datetime.now(), difficulty, nonce, transactions)
   return newBlock
 
 def new_block_from_list(attributesList):
-  if len(attributesList) == 9:
-    blockSize = int(attributesList[0])
-    previousBlockHash = attributesList[1]
-    merkleRoot = attributesList[2]
-    blockTime = datetime.strptime(attributesList[3],'%Y-%m-%d %H:%M:%S.%f')
-    difficulty = int(attributesList[4])
-    nonce = int(attributesList[5])
-    transactionsCounter = int(attributesList[6])
+  if len(attributesList) == 7:
+    previousBlockHash = attributesList[0]
+    merkleRoot = attributesList[1]
+    blockTime = datetime.strptime(attributesList[2],'%Y-%m-%d %H:%M:%S.%f')
+    difficulty = int(attributesList[3])
+    nonce = int(attributesList[4])
 
-    data = attributesList[7]
+    data = attributesList[5]
     transactions = []
     data = re.split("\W+",data)
     while '' in data:
@@ -104,8 +100,8 @@ def new_block_from_list(attributesList):
     for transaction in data:
       transactions.append(transaction)
 
-    blockHash = attributesList[8]
-    return Block(blockSize, previousBlockHash, merkleRoot, blockTime, difficulty, nonce, transactionsCounter, transactions, blockHash)
+    blockHash = attributesList[6]
+    return Block(previousBlockHash, merkleRoot, blockTime, difficulty, nonce, transactions, blockHash)
   else:
     print("util.py -> new_block_from_list: wrong number of attributes")
 
@@ -119,12 +115,7 @@ def new_block_from_string(string):
 
 def validate_block(newBlock, previousBlock):
   res = True
-  # il faut renommer size par ID ou number, non?
-  # on parle de la taille de la blockChain
-  if (previousBlock.getSize()+1 != newBlock.getSize()):
-    print("Invalid transactionCounter")
-    res = False
-  elif (previousBlock.getHash() != newBlock.getPreviousBlockHash()):
+  if (previousBlock.getHash() != newBlock.getPreviousBlockHash()):
     print("Invalid previousBlockHash")
     res = False
   elif (newBlock.getHash()[:newBlock.getDifficulty()] != newBlock.getDifficulty()*"0"):
@@ -132,21 +123,4 @@ def validate_block(newBlock, previousBlock):
     res = False
   return res
 
-'''
-TEST ajout d'un block reçu par un relay
 
-previousBlock = genesis_block()
-previousBlock.hash_block()
-newBlock = Block(286,previousBlock.getHash(),"1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5",datetime.now(),0,42,1,["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
-msg = newBlock.toString()
-newBlock = new_block_from_string(msg)
-newBlock.hash_block()
-if (newBlock == None):
-  print("Error: creation block from string")
-else:
-  if (validate_block(newBlock, previousBlock)):
-    print("Bloc validé")
-    previousBlock = newBlock
-    add_block_to_log(newBlock)
-
-'''
