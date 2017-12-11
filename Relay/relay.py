@@ -183,7 +183,7 @@ def encodeAndSend(toSocket, message):
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
-  msg = fromSocket.recv(1024)
+  msg = fromSocket.recv(4096)
   message = pickle.loads(msg)
   return message
 

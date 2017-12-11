@@ -118,7 +118,9 @@ def sign_transaction(privateKey, data):
   signature = signer.sign(sha)
   return(signature)
   
-def verify_signature(publicKey, signature, sha):
+def verify_signature(publicKey, signature, senderAddress, receiverAddress, amount, time):
+  data = str(senderAddress) + receiverAddress + amount + time
+  sha = SHA256.new(data.encode())
   signaturePublicKey = DSA.import_key(publicKey)
   verifier = DSS.new(signaturePublicKey, 'fips-186-3')
   try:
@@ -129,9 +131,8 @@ def verify_signature(publicKey, signature, sha):
     
 
 def send_format(publicKey, signature, senderAddress, receiverAddress, amount, time):
-  data = [publicKey.exportKey(), signature, sha, senderAddress, receiverAddress, amount, time]
-  print(sha)
-  print(type(publicKey.exportKey()), type(signature), type(sha), type(senderAddress), type(receiverAddress), type(amount), type(datetime.now()))
+  data = [publicKey.exportKey(), signature, senderAddress, receiverAddress, amount, time]
+  print(type(publicKey.exportKey()), type(signature), type(senderAddress), type(receiverAddress), type(amount), type(datetime.now()))
   print(type(data))
   return data
 	
