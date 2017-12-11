@@ -40,7 +40,9 @@ class ThreadMinerListenRelay(Thread):
       elif (msg[0] == "x") :
         previousBlock = msg[1]
       
-      elif (msg[0] == "t") : #C'est une transaction 
+      elif (msg[0] == "t") : #C'est une transaction
+        data = str(msg[1][2]) + msg[1][3] + msg[1][4] + msg[1][5]
+        sha = SHA256.new(data.encode()) 
         self.transactionsToMine.append(msg[1])
 
 

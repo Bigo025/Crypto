@@ -107,12 +107,12 @@ class ThreadRelayListenWallets(Thread):
         for wallet in walletsToRead:
           msg = receiveAndDecode(wallet)
           msgToSend = [msg[2], msg[3], msg[4], msg[5]]
-          verify_signature(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5])
-          self.transactionsList.append(msgToSend)
-          print("Transaction received from Wallet")
+          if (verify_signature(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5])):
+            self.transactionsList.append(msgToSend)
+            print("Transaction received from Wallet")
 
-          for miner in self.connectedMiners : 
-            encodeAndSend(miner, ["t", msgToSend])
+            for miner in self.connectedMiners : 
+              encodeAndSend(miner, ["t", msgToSend])
       
 
 #---------------------------------------------------------------
@@ -195,8 +195,10 @@ def verify_signature(publicKey, signature, senderAddress, receiverAddress, amoun
   try:
     verifier.verify(sha, signature)
     print("The signature is authentic.")
+    return True
   except ValueError:
     print("Error :The signature is not authentic.")
+    return False
 
 
 def encodeAndSend(toSocket, message):
