@@ -43,11 +43,12 @@ class ThreadWalletWrite(Thread):
       print(" Pour une nouvelle transaction entez : ")
       recipient = input(" L'addresse du recipient  : ")
       amount = input(" Montant  : ")
-      data = str(publicAddress) + recipient + amount + str(datetime.now())
-      signature, sha = sign_transaction(privateKey, data.encode())
-      data = send_format(publicKey, signature, sha, str(publicAddress), recipient, amount)
+      time = str(datetime.now())
+      data = str(publicAddress) + recipient + amount + time
+      signature = sign_transaction(privateKey, data.encode())
+      dataToSend = send_format(publicKey, signature, str(publicAddress), recipient, amount, time)
       
-      encodeAndSend(self.connectionToRelay, data)
+      encodeAndSend(self.connectionToRelay, dataToSend)
       print(" Montant envoyé")
 
 #---------------------------------------------------------------
@@ -115,7 +116,7 @@ def sign_transaction(privateKey, data):
   sha = SHA256.new(data)
   signer = DSS.new(privateKey, 'fips-186-3')
   signature = signer.sign(sha)
-  return(signature, sha)
+  return(signature)
   
 def verify_signature(publicKey, signature, sha):
   signaturePublicKey = DSA.import_key(publicKey)
@@ -127,8 +128,11 @@ def verify_signature(publicKey, signature, sha):
     print("Error :The signature is not authentic.")
     
 
-def send_format(publicKey, signature, sha, senderAddress, receiverAddress, amount):
-  data = (publicKey.exportKey(), signature, sha, senderAddress, receiverAddress, amount, datetime.now())
+def send_format(publicKey, signature, senderAddress, receiverAddress, amount, time):
+  data = [publicKey.exportKey(), signature, sha, senderAddress, receiverAddress, amount, time]
+  print(sha)
+  print(type(publicKey.exportKey()), type(signature), type(sha), type(senderAddress), type(receiverAddress), type(amount), type(datetime.now()))
+  print(type(data))
   return data
 	
 #---------------------------------------------------------------
