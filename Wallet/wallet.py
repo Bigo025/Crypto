@@ -8,6 +8,9 @@ from Crypto.Hash import SHA256
 import hashlib
 import pickle
 from datetime import datetime
+from os import path
+sys.path.append(path.abspath('../Utils'))
+from Blocks import Block
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -24,7 +27,6 @@ class ThreadWalletListen(Thread):
 
     while True :
       msg = receiveAndDecode(self.connectionToRelay)
-      print("Reçu Relay: {}".format(msg))
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------

@@ -71,10 +71,10 @@ class ThreadMasterListenToRelay(Thread):
           if (newBlock == None):
             print("Error: creation block from string")
           else:
-            if (validate_block(newBlock, previousBlock)):
+            if (util.validate_block(newBlock, previousBlock)):
               print("Bloc validé")
               previousBlock = newBlock
-              add_block_to_log(newBlock)
+              util.add_block_to_log(newBlock)
               encodeAndSend(relay, newBlock)
 
 

@@ -32,7 +32,7 @@ class ThreadRelayListenMaster(Thread):
         [], [], 0.05)
       if len(messageFromMaster) != 0:
         lastBlock = receiveAndDecode(self.connectionToMaster)
-        print("Reçu Master: {}".format(msg))
+        print("Reçu nouveau block du Master")
 
         for miner in self.connectedMiners :
           encodeAndSend(miner, ["x",lastBlock.getHash()])

@@ -28,7 +28,7 @@ class Block:
            str(self.transactions)
     sha.update(data.encode())
     double_sha.update(sha.digest())
-    self.hash = str(double_sha.digest())
+    self.hash = double_sha.hexdigest()
     return self.hash
 
   def toString(self, log = False):

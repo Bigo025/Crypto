@@ -120,9 +120,6 @@ def validate_block(newBlock, previousBlock):
   if (previousBlock.getHash() != newBlock.getPreviousBlockHash()):
     print("Invalid previousBlockHash")
     res = False
-  elif (newBlock.getHash()[:newBlock.getDifficulty()] != newBlock.getDifficulty()*"0"):
-    print("Invalid difficulty")
-    res = False
   return res
 
 
