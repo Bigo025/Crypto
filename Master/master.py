@@ -125,5 +125,5 @@ def main():
     master(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
-  add_block_to_log(previousBlock)
+  util.add_block_to_log(previousBlock)
   main()

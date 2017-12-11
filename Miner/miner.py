@@ -32,7 +32,7 @@ class ThreadMinerListenRelay(Thread):
     while(True):
 
       msg = receiveAndDecode(self.connectionToRelay)
-      print("Transaction : {}".format(msg))
+      print("Transaction received")
 
       if (msg == "Stop") : #Message pour stop car un block a été trouvé par quelqu'un
         stopMinerWork()
@@ -62,7 +62,8 @@ class ThreadMinerWork(Thread):
     compteur = 0
     global previousBlock
     prev_block = previousBlock
-    while (not found and not self.stop):
+    while (not found and not self.stop and (len(transactionsList) != 0)):
+      print(nonce)
       mrklroot = self.calculateMerkleRoot(transactionsList)
       date = int(time.time()) # 2014-02-20 04:57:25
       bits = 0x1fffffff
@@ -116,7 +117,7 @@ class ThreadMinerWork(Thread):
         newTransactionsList.append(hashLeftTransaction.hexdigest())
     if len(tmpTransactionsList) != 1:
       transactionsList = newTransactionsList
-      calculateMerkleRoot(transactionsList)
+      self.calculateMerkleRoot(transactionsList)
     return transactionsList[0]
 
   def previousBlockStillTheSame(self, currentPreviousBlock):
@@ -141,9 +142,10 @@ def miner (hostName, hostPort):
   global thread1
   global thread2
   global transactions
-  
-  transactions = receiveAndDecode(connectionToRelay)
+  global previousBlock
 
+  transactions = receiveAndDecode(connectionToRelay)
+  previousBlock = receiveAndDecode(connectionToRelay)
 
   thread1 = ThreadMinerListenRelay(connectionToRelay, transactions)
   thread2 = ThreadMinerWork(transactions)
@@ -156,7 +158,7 @@ def encodeAndSend(toSocket, message):
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
-  msg = fromSocket.recv(1024)
+  msg = fromSocket.recv(4096)
   message = pickle.loads(msg)
   return message
 
@@ -184,6 +186,5 @@ if __name__ == '__main__':
   thread1 = None
   thread2 = None
   previousBlock = None
-  merkleRoot = None
   transactions = None
   main()
