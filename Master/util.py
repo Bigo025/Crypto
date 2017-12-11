@@ -63,9 +63,11 @@ def genesis_block():
   genesis = Block(None,
                   "1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5",
                   datetime.now(),
-                  1,
+                  0,
                   100,
-                  ["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"])
+                  ["1dee35fe304db59e2d0b3e0d19bb43454dc8a8bca95ac8da6570763f45ddf3d5"]
+                  )
+  genesis.hash_block()
   return genesis
 
 	

@@ -75,7 +75,7 @@ class ThreadRelayListenToNewConnections(Thread):
         else :
           self.connectedMiners.append(clientConnection)
           encodeAndSend(clientConnection, self.transactionsList) #Liste des transactions
-          encodeAndSend(clientConnection, lastBlock) #LastBlock
+          encodeAndSend(clientConnection, lastBlock.getHash()) #LastBlock
           print("Add new miner")
       
 

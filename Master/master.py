@@ -5,9 +5,6 @@ import util
 from threading import Thread
 import pickle
 
-previousBlock = util.genesis_block()
-
-
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -125,5 +122,7 @@ def main():
     master(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
+  previousBlock = util.genesis_block()
+  print(previousBlock.getHash())
   util.add_block_to_log(previousBlock)
   main()
