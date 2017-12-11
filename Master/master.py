@@ -1,7 +1,9 @@
 import sys
 import socket
 import select
-import util
+from os import path
+sys.path.append(path.abspath('../Utils'))
+from util import *
 from threading import Thread
 import pickle
 
@@ -71,10 +73,10 @@ class ThreadMasterListenToRelay(Thread):
           if (newBlock == None):
             print("Error: creation block from string")
           else:
-            if (util.validate_block(newBlock, previousBlock)):
+            if (validate_block(newBlock, previousBlock)):
               print("Bloc validé")
               previousBlock = newBlock
-              util.add_block_to_log(newBlock)
+              add_block_to_log(newBlock)
               encodeAndSend(relay, newBlock)
 
 
@@ -104,7 +106,7 @@ def encodeAndSend(toSocket, message):
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
-  msg = fromSocket.recv(1024)
+  msg = fromSocket.recv(10000)
   message = pickle.loads(msg)
   return message
 
@@ -122,7 +124,9 @@ def main():
     master(sys.argv[1],int(sys.argv[2]))
 
 if __name__ == '__main__':
-  previousBlock = util.genesis_block()
-  print(previousBlock.getHash())
-  util.add_block_to_log(previousBlock)
+  previousBlock = genesis_block()
+  file = open("../Utils/blockchain.log","w")
+  file.write("")
+  file.close()
+  add_block_to_log(previousBlock)
   main()

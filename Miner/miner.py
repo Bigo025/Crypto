@@ -43,16 +43,12 @@ class ThreadMinerListenRelay(Thread):
         print(" Stop working")
       
       elif (msg[0] == "x") :
-        print(previousBlock)
         previousBlock = msg[1]
-        print(previousBlock)
         print(" New block received")
       
       elif (msg[0] == "t") : #C'est une transaction
-        print(transactions)
         print(" Transaction received")
         transactions.append(msg[1])
-        print(transactions)
         
         
   def stopThread(self):
@@ -78,31 +74,26 @@ class ThreadMinerWork(Thread):
     compteur = 0
     global previousBlock
     prev_block = previousBlock
-    print("HOY")
     while (not found and not self.stop):
       transactionsList = transactions[:]
       prev_block = previousBlock
       if (len(transactionsList) != 0): 
-        #print("0", nonce)
+
         mrklroot = self.calculateMerkleRoot(transactionsList)
-        #print(type(mrklroot))
-        date = int(time.time()) # 2014-02-20 04:57:25
+        date = int(time.time())
         bits = 0x1fffffff
         # https://en.bitcoin.it/wiki/Difficulty
         # Difficulté établie à 4 zéros
         exp = bits >> 24
-        mant = bits & 0xffffff
+        mant = bits & 0x3fff
         target_hexstr = '%064x' % (mant * (1<<(8*(exp - 3))))
         target_str = codecs.decode(target_hexstr, 'hex')
-        #print("1",prev_block)
-        #print("2",mrklroot, type(mrklroot))
+
         header = ( codecs.decode(prev_block, 'hex') +
                   codecs.decode(mrklroot, 'hex') + struct.pack("<LLL", date, bits, nonce))
         hashtest = hashlib.sha256(hashlib.sha256(header).digest()).digest()
         hash = hashlib.sha256(hashlib.sha256(header).digest()).hexdigest()
-        print("&",previousBlock)
-        print("%",prev_block)
-        #print((hashtest[::-1] < target_str) , self.previousBlockStillTheSame(prev_block) , self.merkleRootStillTheSame(mrklroot) , not self.stop)
+
         if ((hashtest[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot) and not self.stop):
           print(nonce, codecs.encode(hashtest[::-1], 'hex'))
           print('success')
@@ -144,11 +135,11 @@ class ThreadMinerWork(Thread):
       else:
         newTransactionsList.append(hashLeftTransaction.hexdigest())
     transactionsList = newTransactionsList
-    #print(type(transactionsList[-1]))
+
     if len(tmpTransactionsList) > 1:
       self.calculateMerkleRoot(transactionsList)
     res = transactionsList[-1]
-    #print(type(res))
+
     return res
 
   def previousBlockStillTheSame(self, currentPreviousBlock):
@@ -199,8 +190,6 @@ def stopMinerWork(relaySocket):
   
   transactions = []
   thread2.stopThread()
-  #thread1.stopThread()
-  #thread1.start()
   thread2 = ThreadMinerWork(relaySocket)
   thread2.start()
 

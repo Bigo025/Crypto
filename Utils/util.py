@@ -3,8 +3,7 @@ import re #regex
 import hashlib
 import sys
 
-from os import path
-sys.path.append(path.abspath('../Utils'))
+
 from Blocks import Block
 
 separator = "-------------------------------------"
@@ -12,10 +11,23 @@ numberOfBlockAttributes = 7
 
         
 def add_block_to_log(newBlock):
-  file = open("blockchain.log","a")
+  file = open("../Utils/blockchain.log","a")
   file.write(separator+"\n")
   file.write(newBlock.toString(True))
   file.close()
+
+def export_block_chain():
+  file = open("blockchain.log","r")
+  string = file.readlines()
+  file.close()
+  return string
+
+def import_block_chain(string):
+  file = open("blockchain.log","w")
+  file.write(string)
+  file.close()
+
+
 
         
 def import_previous_block():
@@ -110,9 +122,6 @@ def new_block_from_list(attributesList):
 def new_block_from_string(string):
   attributesList = string.split("&") #separator = &
   return new_block_from_list(attributesList)
-	
-# blockchain.append(genesis_block())
-# blockchain.append(new_block(size, ...))
 
 
 def validate_block(newBlock, previousBlock):

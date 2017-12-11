@@ -11,6 +11,7 @@ from datetime import datetime
 from os import path
 sys.path.append(path.abspath('../Utils'))
 from Blocks import Block
+from util import *
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -26,7 +27,8 @@ class ThreadWalletListen(Thread):
     """Code à exécuter pendant l'exécution du thread."""
 
     while True :
-      msg = receiveAndDecode(self.connectionToRelay)
+      lastBlock = receiveAndDecode(self.connectionToRelay)
+
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -72,7 +74,6 @@ def wallet(hostName, hostPort):
   print("Connection established with Relay on port {}".format(hostPort))
   
   encodeAndSend(connectionToRelay, "0") #s'identifie au relay en tant que wallet
-
   thread1 = ThreadWalletListen(connectionToRelay)
   thread2 = ThreadWalletWrite(connectionToRelay)
 
@@ -84,7 +85,7 @@ def encodeAndSend(toSocket, message):
   toSocket.send(msg)
 
 def receiveAndDecode(fromSocket):
-  msg = fromSocket.recv(1024)
+  msg = fromSocket.recv(10000)
   message = pickle.loads(msg)
   return message
 

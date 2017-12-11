@@ -1,9 +1,0 @@
-The Genesis Block:
-The first block in the blockchain is called the genesis block and was created in 2009. 
-It is the common ancestor of all the blocks in the blockchain, 
-meaning that if you start at any block and follow the chain backward in time, 
-you will eventually arrive at the genesis block.
-
-
-Merkle Trees
-Each block in the bitcoin blockchain contains a summary of all the transactions in the block, using a merkle tree.
