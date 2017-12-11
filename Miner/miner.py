@@ -100,13 +100,14 @@ class ThreadMinerWork(Thread):
     newTransactionsList = []
     
     for i in range(0, len(tmpTransactionsList), 2):
-      leftTransaction = tmpTransactionsList[i]
+      leftTransaction = str(tmpTransactionsList[i][0]) + str(tmpTransactionsList[i][1]) + str(tmpTransactionsList[i][2])+ str(tmpTransactionsList[i][3])
       if (i+1 != len(tmpTransactionsList)):
-        rightTransaction = tmpTransactionsList[i+1]
+        rightTransaction = str(tmpTransactionsList[i+1][0]) + str(tmpTransactionsList[i+1][1]) + str(tmpTransactionsList[i+1][2])+ str(tmpTransactionsList[i+1][3])
       else:
         rightTransaction = ""
         
       # hash
+      
       hashLeftTransaction = hashlib.sha256(leftTransaction.encode())
       if rightTransaction != "":
         hashRightTransaction = hashlib.sha256(rightTransaction.encode())
