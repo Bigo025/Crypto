@@ -4,6 +4,10 @@ import select
 from threading import Thread
 import pickle
 
+from os import path
+sys.path.append(path.abspath('../Utils'))
+from Blocks import Block
+
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -67,8 +71,8 @@ class ThreadRelayListenToNewConnections(Thread):
           print("Add new wallet")
         else :
           self.connectedMiners.append(clientConnection)
-          encodeAndSend(self.transactionsList) #Liste des transactions
-          encodeAndSend(lastBlock) #LastBlock
+          encodeAndSend(clientConnection, self.transactionsList) #Liste des transactions
+          encodeAndSend(clientConnection, lastBlock) #LastBlock
           print("Add new miner")
       
 
@@ -131,14 +135,15 @@ class ThreadRelayListenMiners(Thread):
       except select.error:
         pass
       else:
-        for miner in minersToRead:
+        if len(minersToRead) != 0 :
+          miner = minersToRead[0]
           self.transactionsList = []
           msg = receiveAndDecode(miner)
           print("New block received from a Miner")
           encodeAndSend(self.connectionToMaster, msg)
 
-        for miner in self.connectedMiners:
-          encodeAndSend(miner, "Stop")
+          for miner in self.connectedMiners:
+            encodeAndSend(miner, "Stop")
       
 
 #---------------------------------------------------------------
