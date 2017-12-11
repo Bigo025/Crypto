@@ -1,15 +1,15 @@
 import hashlib
 
 class Block:
-  def __init__(self, size, previousBlockHash, merkleRoot, time, difficulty, nonce, transactionCounter, transactions, blockHash = None):
-    self.size = size
+  def __init__(self, previousBlockHash, merkleRoot, time, difficulty, nonce, transactions, blockHash = None):
+    self.size = 8
     self.previousBlockHash = previousBlockHash
     self.merkleRoot = merkleRoot
     self.time = time
     self.difficulty = difficulty
     self.nonce = nonce
-    self.transactionCounter = transactionCounter
     self.transactions = transactions
+    self.transactionCounter = len(self.transactions)
     self.hash = blockHash
     
   def hash_block(self):

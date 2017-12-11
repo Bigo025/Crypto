@@ -9,13 +9,17 @@ import random
 from threading import Thread
 import pickle
 
+from os import path
+sys.path.append(path.abspath('../Utils'))
+import Blocks.py
+
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 
-class ThreadMinerListenRelay(Thread, transactions):
+class ThreadMinerListenRelay(Thread):
 
-  def __init__(self, relaySocket):
+  def __init__(self, relaySocket,transactions):
     Thread.__init__(self)
     self.connectionToRelay = relaySocket
     self.transactionsToMine = transactions
@@ -34,15 +38,11 @@ class ThreadMinerListenRelay(Thread, transactions):
         stopMinerWork()
       
       elif (msg[0] == "x") :
-        previousBlock = msg[1:]
+        previousBlock = msg[1]
       
       elif (msg[0] == "t") : #C'est une transaction 
-        self.transactionsToMine.append(msg)
+        self.transactionsToMine.append(msg[1])
 
-
-      msg = "["+msg+"]"
-      print("Bloc -> {}".format(msg))
-      encodeAndSend(self.connectionToRelay, msg)
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -50,11 +50,9 @@ class ThreadMinerListenRelay(Thread, transactions):
 
 class ThreadMinerWork(Thread):
 
-  def __init__(self, transactions, blockMined, previousBlock):
+  def __init__(self, transactions):
     Thread.__init__(self)
     self.transactionsToMine = transactions
-    self.block = blockMined
-    self.previousBlock = previousBlock
     self.stop = False
 
   def run(self):
@@ -62,8 +60,9 @@ class ThreadMinerWork(Thread):
     transactionsList = self.transactionsToMine[:]
     nonce = random.randint(0, 1000000000)
     compteur = 0
-    prev_block = self.previousBlock
-    while (not found or not self.stop):
+    global previousBlock
+    prev_block = previousBlock
+    while (not found and not self.stop):
       mrklroot = self.calculateMerkleRoot(transactionsList)
       date = int(time.time()) # 2014-02-20 04:57:25
       bits = 0x1fffffff
@@ -78,13 +77,15 @@ class ThreadMinerWork(Thread):
                 codecs.decode(mrklroot[::-1], 'hex') + struct.pack("<LLL", date, bits, nonce))
       hash = hashlib.sha256(hashlib.sha256(header).digest()).digest()
       print(nonce, codecs.encode(hash[::-1], 'hex'))
-      if ((hash[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot)):
+      if ((hash[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot) and not self.stop):
         print('success')
         print(compteur)
         found = True
+        newBlock = Block(prev_block, mrklroot, date, bits, nonce, transactionsList, hash)
+        encodeAndSend(newBlock)
       nonce += 1
       if nonce==1000000000:
-        nonce=1
+        nonce=0
       compteur +=1
 
 
@@ -119,7 +120,8 @@ class ThreadMinerWork(Thread):
     return transactionsList[0]
 
   def previousBlockStillTheSame(self, currentPreviousBlock):
-      return currentPreviousBlock == self.previousBlock
+      global previousBlock
+      return currentPreviousBlock == previousBlock
   
   def stopThread(self):
     self.stop = True
@@ -138,15 +140,13 @@ def miner (hostName, hostPort):
 
   global thread1
   global thread2
-  global block
   global transactions
   
-  block = None
   transactions = receiveAndDecode(connectionToRelay)
 
 
   thread1 = ThreadMinerListenRelay(connectionToRelay, transactions)
-  thread2 = ThreadMinerWork(transactions, block)
+  thread2 = ThreadMinerWork(transactions)
   
   thread1.start()
   thread2.start()
@@ -162,13 +162,11 @@ def receiveAndDecode(fromSocket):
 
 def stopMinerWork():
   global transactions
-  global block
   global thread2
   
   transactions = []
-  block = None
   thread2.stopThread()
-  thread2 = ThreadMinerWork(transactions, block)
+  thread2 = ThreadMinerWork(transactions)
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -187,6 +185,5 @@ if __name__ == '__main__':
   thread2 = None
   previousBlock = None
   merkleRoot = None
-  block = None
   transactions = None
   main()
