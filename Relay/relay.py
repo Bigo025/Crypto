@@ -100,7 +100,7 @@ class ThreadRelayListenWallets(Thread):
         for wallet in walletsToRead:
           msg = receiveAndDecode(wallet)
           self.transactionsList.append(msg)
-          print("Reçu Wallet: {}".format(msg))
+          print("Transaction received from Wallet")
 
           for miner in self.connectedMiners : 
             encodeAndSend(miner, ["t", msg])

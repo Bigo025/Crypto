@@ -11,7 +11,7 @@ import pickle
 
 from os import path
 sys.path.append(path.abspath('../Utils'))
-import Blocks.py
+from Blocks import Block
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------

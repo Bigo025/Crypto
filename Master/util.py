@@ -1,7 +1,11 @@
 from datetime import datetime
-from Blocks import Block
 import re #regex
 import hashlib
+import sys
+
+from os import path
+sys.path.append(path.abspath('../Utils'))
+from Blocks import Block
 
 separator = "-------------------------------------"
 numberOfBlockAttributes = 9
