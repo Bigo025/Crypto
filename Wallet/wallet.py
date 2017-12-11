@@ -40,6 +40,9 @@ class ThreadWalletWrite(Thread):
     """Code à exécuter pendant l'exécution du thread."""
 
     while True :
+      pritn("********************************************************** \n")
+      print(" Adresse publique ")
+      pritn("********************************************************** \n")
       print(" Pour une nouvelle transaction entez : ")
       recipient = input(" L'addresse du recipient  : ")
       amount = input(" Montant  : ")
@@ -60,7 +63,7 @@ def wallet(hostName, hostPort):
   connectionToRelay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   connectionToRelay.connect((hostName, hostPort))
   print("Connection established with Relay on port {}".format(hostPort))
-
+  
   encodeAndSend(connectionToRelay, "0") #s'identifie au relay en tant que wallet
 
   thread1 = ThreadWalletListen(connectionToRelay)
@@ -132,8 +135,6 @@ def verify_signature(publicKey, signature, senderAddress, receiverAddress, amoun
 
 def send_format(publicKey, signature, senderAddress, receiverAddress, amount, time):
   data = [publicKey.exportKey(), signature, senderAddress, receiverAddress, amount, time]
-  print(type(publicKey.exportKey()), type(signature), type(senderAddress), type(receiverAddress), type(amount), type(datetime.now()))
-  print(type(data))
   return data
 	
 #---------------------------------------------------------------
@@ -152,7 +153,6 @@ def main():
     wallet(sys.argv[1],int(sys.argv[2]))
     # call fetch_key 
     privateKey, publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
-  print(publicAddress)
 
 
 if __name__ == '__main__':
