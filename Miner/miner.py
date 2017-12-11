@@ -21,17 +21,19 @@ from Blocks import Block
 
 class ThreadMinerListenRelay(Thread):
 
-  def __init__(self, relaySocket,transactions):
+  def __init__(self, relaySocket):
+    global transactions
     Thread.__init__(self)
     self.connectionToRelay = relaySocket
-    self.transactionsToMine = transactions
+    self.stop = False 
 
   def run(self):
     """Code à exécuter pendant l'exécution du thread."""
     
     global previousBlock
+    global transactions
     
-    while(True):
+    while(not self.stop):
 
       msg = receiveAndDecode(self.connectionToRelay)
       
@@ -41,14 +43,20 @@ class ThreadMinerListenRelay(Thread):
         print(" Stop working")
       
       elif (msg[0] == "x") :
+        print(previousBlock)
         previousBlock = msg[1]
+        print(previousBlock)
         print(" New block received")
       
       elif (msg[0] == "t") : #C'est une transaction
+        print(transactions)
         print(" Transaction received")
-        #data = str(msg[1][0]) + msg[1][1] + msg[1][2] + msg[1][3]
-        #sha = SHA256.new(data.encode()) 
-        self.transactionsToMine.append(msg[1])
+        transactions.append(msg[1])
+        print(transactions)
+        
+        
+  def stopThread(self):
+    self.stop = True
 
 
 #---------------------------------------------------------------
@@ -57,21 +65,23 @@ class ThreadMinerListenRelay(Thread):
 
 class ThreadMinerWork(Thread):
 
-  def __init__(self, rlayConnection,transactions):
+  def __init__(self, rlayConnection):
+    global transactions
     Thread.__init__(self)
-    self.transactionsToMine = transactions
     self.rlayConnection = rlayConnection
     self.stop = False
 
   def run(self):
+    global transactions
     found = False
     nonce = random.randint(0, 1000000000)
     compteur = 0
     global previousBlock
     prev_block = previousBlock
-    #print(type(prev_block))
+    print("HOY")
     while (not found and not self.stop):
-      transactionsList = self.transactionsToMine[:]
+      transactionsList = transactions[:]
+      prev_block = previousBlock
       if (len(transactionsList) != 0): 
         #print("0", nonce)
         mrklroot = self.calculateMerkleRoot(transactionsList)
@@ -81,7 +91,7 @@ class ThreadMinerWork(Thread):
         # https://en.bitcoin.it/wiki/Difficulty
         # Difficulté établie à 4 zéros
         exp = bits >> 24
-        mant = bits & 0x3fff
+        mant = bits & 0xffffff
         target_hexstr = '%064x' % (mant * (1<<(8*(exp - 3))))
         target_str = codecs.decode(target_hexstr, 'hex')
         #print("1",prev_block)
@@ -90,7 +100,9 @@ class ThreadMinerWork(Thread):
                   codecs.decode(mrklroot, 'hex') + struct.pack("<LLL", date, bits, nonce))
         hashtest = hashlib.sha256(hashlib.sha256(header).digest()).digest()
         hash = hashlib.sha256(hashlib.sha256(header).digest()).hexdigest()
-        
+        print("&",previousBlock)
+        print("%",prev_block)
+        #print((hashtest[::-1] < target_str) , self.previousBlockStillTheSame(prev_block) , self.merkleRootStillTheSame(mrklroot) , not self.stop)
         if ((hashtest[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot) and not self.stop):
           print(nonce, codecs.encode(hashtest[::-1], 'hex'))
           print('success')
@@ -105,7 +117,8 @@ class ThreadMinerWork(Thread):
 
 
   def merkleRootStillTheSame(self, currentMerkleRoot):
-    transactionsList = self.transactionsToMine[:]
+    global transactions
+    transactionsList = transactions[:]
     newMerkleRoot = self.calculateMerkleRoot(transactionsList)
     return newMerkleRoot == currentMerkleRoot
 
@@ -165,8 +178,8 @@ def miner (hostName, hostPort):
   transactions = receiveAndDecode(connectionToRelay)
   previousBlock = receiveAndDecode(connectionToRelay)
 
-  thread1 = ThreadMinerListenRelay(connectionToRelay, transactions)
-  thread2 = ThreadMinerWork(connectionToRelay, transactions)
+  thread1 = ThreadMinerListenRelay(connectionToRelay)
+  thread2 = ThreadMinerWork(connectionToRelay)
   
   thread1.start()
   thread2.start()
@@ -186,7 +199,10 @@ def stopMinerWork(relaySocket):
   
   transactions = []
   thread2.stopThread()
-  thread2 = ThreadMinerWork(relaySocket, transactions)
+  #thread1.stopThread()
+  #thread1.start()
+  thread2 = ThreadMinerWork(relaySocket)
+  thread2.start()
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
