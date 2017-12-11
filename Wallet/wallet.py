@@ -40,6 +40,10 @@ class ThreadWalletWrite(Thread):
     """Code à exécuter pendant l'exécution du thread."""
 
     while True :
+      global privateKey 
+      global publicKey
+      global publicAddress
+      privateKey, publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
       print("********************************************************** \n")
       print(" Adresse publique ", publicAddress)
       print("********************************************************** \n")
@@ -133,9 +137,7 @@ def send_format(publicKey, signature, senderAddress, receiverAddress, amount, ti
 #---------------------------------------------------------------
 
 def main():
-  global privateKey 
-  global publicKey
-  global publicAddress
+
   if len(sys.argv) != 5:
     print("Il faut mettre une adresse Ip, un port, Nom du wallet et mot de passe")
     sys.exit(1)
@@ -143,7 +145,7 @@ def main():
   else:
     wallet(sys.argv[1],int(sys.argv[2]))
     # call fetch_key 
-    privateKey, publicKey, publicAddress = fetch_key(sys.argv[3],sys.argv[4])
+    
 
 
 if __name__ == '__main__':
