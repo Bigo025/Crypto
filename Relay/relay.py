@@ -10,7 +10,7 @@ import pickle
 
 class ThreadRelayListenMaster(Thread):
 
-  def __init__(self, masterSocket, wallets, miner):
+  def __init__(self, masterSocket, wallets, miners):
     Thread.__init__(self)
     self.connectionToMaster = masterSocket
     self.connectedWallets = wallets

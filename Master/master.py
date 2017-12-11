@@ -35,7 +35,7 @@ class ThreadMasterListenToNewConnexion(Thread):
         self.connectedRelays.append(relayConnection)
         print("New relay")
         global previousBlock
-        encodeAndSend(connection, previousBlock)
+        encodeAndSend(relayConnection, previousBlock)
 
 
 
