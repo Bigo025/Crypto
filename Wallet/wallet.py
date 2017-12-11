@@ -41,7 +41,7 @@ class ThreadWalletWrite(Thread):
 
     while True :
       print("********************************************************** \n")
-      print(" Adresse publique ")
+      print(" Adresse publique ", publicAddress)
       print("********************************************************** \n")
       print(" Pour une nouvelle transaction entez : ")
       recipient = input(" L'addresse du recipient  : ")
@@ -104,7 +104,6 @@ def fetch_key(name, password):
   
   #RIPEMD160 to derive addresses from public keys
   address = ripemd.hexdigest()
-  print("  Addresse public :   ", address)
   #print("-----------------------------------------------------------------------------")
   #print(key.publickey().exportKey())
   return (key, key.publickey(), address) 
