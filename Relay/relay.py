@@ -2,6 +2,9 @@ import sys
 import socket
 import select
 from threading import Thread
+from Crypto.PublicKey import DSA
+from Crypto.Signature import DSS
+from Crypto.Hash import SHA256
 import pickle
 
 from os import path
@@ -103,11 +106,13 @@ class ThreadRelayListenWallets(Thread):
       else:
         for wallet in walletsToRead:
           msg = receiveAndDecode(wallet)
-          self.transactionsList.append(msg)
+          msgToSend = [msg[2], msg[3], msg[4], msg[5]]
+          verify_signature(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5])
+          self.transactionsList.append(msgToSend)
           print("Transaction received from Wallet")
 
           for miner in self.connectedMiners : 
-            encodeAndSend(miner, ["t", msg])
+            encodeAndSend(miner, ["t", msgToSend])
       
 
 #---------------------------------------------------------------
@@ -181,6 +186,17 @@ def relay(hostName, portMaster, portRelay):
   thread2.start()
   thread3.start()
   thread4.start()
+
+def verify_signature(publicKey, signature, senderAddress, receiverAddress, amount, time):
+  data = str(senderAddress) + receiverAddress + amount + time
+  sha = SHA256.new(data.encode())
+  signaturePublicKey = DSA.import_key(publicKey)
+  verifier = DSS.new(signaturePublicKey, 'fips-186-3')
+  try:
+    verifier.verify(sha, signature)
+    print("The signature is authentic.")
+  except ValueError:
+    print("Error :The signature is not authentic.")
 
 
 def encodeAndSend(toSocket, message):

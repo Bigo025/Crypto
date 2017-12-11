@@ -53,6 +53,7 @@ class ThreadWalletWrite(Thread):
       
       encodeAndSend(self.connectionToRelay, dataToSend)
       print(" Montant envoyé")
+      pritn("********************************************************** \n")
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -121,16 +122,7 @@ def sign_transaction(privateKey, data):
   signature = signer.sign(sha)
   return(signature)
   
-def verify_signature(publicKey, signature, senderAddress, receiverAddress, amount, time):
-  data = str(senderAddress) + receiverAddress + amount + time
-  sha = SHA256.new(data.encode())
-  signaturePublicKey = DSA.import_key(publicKey)
-  verifier = DSS.new(signaturePublicKey, 'fips-186-3')
-  try:
-    verifier.verify(sha, signature)
-    print("The signature is authentic.")
-  except ValueError:
-    print("Error :The signature is not authentic.")
+
     
 
 def send_format(publicKey, signature, senderAddress, receiverAddress, amount, time):
