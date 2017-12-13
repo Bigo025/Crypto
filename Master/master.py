@@ -77,7 +77,8 @@ class ThreadMasterListenToRelay(Thread):
               print("Bloc validé")
               previousBlock = newBlock
               add_block_to_log(newBlock)
-              encodeAndSend(relay, newBlock)
+              for relayToSend in self.connectedRelays:
+                encodeAndSend(relayToSend, newBlock)
 
 
 #---------------------------------------------------------------
