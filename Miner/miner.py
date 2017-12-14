@@ -71,7 +71,6 @@ class ThreadMinerWork(Thread):
     global transactions
     found = False
     nonce = random.randint(0, 1000000000)
-    compteur = 0
     global previousBlock
     prev_block = previousBlock
     while (not found and not self.stop):
@@ -95,9 +94,7 @@ class ThreadMinerWork(Thread):
         hash = hashlib.sha256(hashlib.sha256(header).digest()).hexdigest()
 
         if ((hashtest[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot) and not self.stop):
-          print(nonce, codecs.encode(hashtest[::-1], 'hex'))
           print('success')
-          print(compteur)
           found = True
           newBlock = Block(prev_block, mrklroot, date, bits, nonce, transactionsList, hash)
           encodeAndSend(self.rlayConnection ,newBlock)
