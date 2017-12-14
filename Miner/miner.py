@@ -5,6 +5,7 @@ import hashlib
 import struct
 import codecs
 import time
+from datetime import datetime
 import random
 from threading import Thread
 import pickle
@@ -73,6 +74,7 @@ class ThreadMinerWork(Thread):
     nonce = random.randint(0, 1000000000)
     global previousBlock
     prev_block = previousBlock
+    difficulty = 4
     while (not found and not self.stop):
       transactionsList = transactions[:]
       prev_block = previousBlock
@@ -80,6 +82,7 @@ class ThreadMinerWork(Thread):
 
         mrklroot = self.calculateMerkleRoot(transactionsList)
         date = int(time.time())
+        actual_date = datetime.now()
         bits = 0x1fffffff
         # https://en.bitcoin.it/wiki/Difficulty
         # Difficulté établie à 4 zéros
@@ -96,12 +99,11 @@ class ThreadMinerWork(Thread):
         if ((hashtest[::-1] < target_str) and self.previousBlockStillTheSame(prev_block) and self.merkleRootStillTheSame(mrklroot) and not self.stop):
           print('success')
           found = True
-          newBlock = Block(prev_block, mrklroot, date, bits, nonce, transactionsList, hash)
+          newBlock = Block(prev_block, mrklroot, actual_date, difficulty, nonce, transactionsList, hash[::-1])
           encodeAndSend(self.rlayConnection ,newBlock)
         nonce += 1
         if nonce==1000000000:
           nonce=0
-        compteur +=1
 
 
   def merkleRootStillTheSame(self, currentMerkleRoot):
